@@ -1,0 +1,104 @@
+<form version="1.1" theme="dark">
+  <label>Firewall Stats</label>
+  <fieldset submitButton="true">
+    <input type="time" token="time_token">
+      <label>Time Range</label>
+      <default>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+    <input type="text" token="ip_token" searchWhenChanged="true">
+      <label>Source IP</label>
+      <default>*</default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <title>Total Connections</title>
+      <single>
+        <search>
+          <query>index="firewall_logs"
+| stats count by Action
+| stats sum(count)</query>
+          <earliest>$earliest$</earliest>
+          <latest>$latest$</latest>
+        </search>
+        <option name="colorMode">block</option>
+        <option name="drilldown">none</option>
+        <option name="height">118</option>
+        <option name="rangeColors">["0x53a051","0xd41f1f","0x1182f3"]</option>
+        <option name="rangeValues">[0,30]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Allowed Count</title>
+        <search>
+          <query>index="firewall_logs" 
+| stats count by Action
+| search Action=allowed
+| table count</query>
+          <earliest>$earliest$</earliest>
+          <latest>$latest$</latest>
+        </search>
+        <option name="colorMode">block</option>
+        <option name="drilldown">none</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0x118832","0x118832"]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Denied Connections</title>
+        <search>
+          <query>index="firewall_logs" 
+| stats count by Action
+| search Action=denied
+| table count</query>
+          <earliest>$earliest$</earliest>
+          <latest>$latest$</latest>
+        </search>
+        <option name="colorMode">block</option>
+        <option name="drilldown">none</option>
+        <option name="rangeColors">["0x53a051","0xd41f1f","0xf8be34","0xf1813f","0xd94e17"]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Blocked Connections</title>
+      <map>
+        <search>
+          <query>index="firewall_logs" Action="Denied" 
+| iplocation "Src IP"
+| geostats count by Country</query>
+          <earliest>$earliest$</earliest>
+          <latest>$latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="mapping.type">marker</option>
+      </map>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <search>
+          <query>index="firewall_logs"
+| stats count(Dst IP) as count_dst_ip count(Dst port) as count_dst_port by "Src IP" Action
+| iplocation "Src IP" 
+| table "Src IP", count_dst_ip, count_dst_port, Action</query>
+          <earliest>$earliest$</earliest>
+          <latest>$latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+</form>
